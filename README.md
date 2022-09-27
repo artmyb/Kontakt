@@ -1,4 +1,4 @@
-# Kontakt
+# Kontakt Legato
 Customizable True Legato Script
 
 HOW TO USE:
