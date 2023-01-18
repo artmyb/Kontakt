@@ -3,12 +3,12 @@ Customizable True Legato Script
 
 PROPERTIES:
 
--A hideable slider-menu where one can adjust the variables defined below to satisfy a great variety of samples.
-
--If you have more than one layers, you can name the layers belonging to the same transition group with the same name and that will work fine.
+-If you have more than one layer, you can name the layers belonging to the same transition group with the same name and that will work fine.
   If you'd like to name them differently, the script must be modified.
   
 -If a transition is more than one octave, since usually there are no samples for more than one octave legato transitions, this script (instead of triggering absurd legato transitions) triggers a release sample for the departed note and a start sample for the arrived note,  which is much similar to what would happen on a string instrument.
+
+-If a note is held on while releasing another key, the script is going to play legato sample transiting from the released to the held-on note. Hence it is possible to play trills just by holding one note and pressing & releasing the other.
 
 HOW TO USE:
 store your legato transitions in separate groups and name them accordingly:
