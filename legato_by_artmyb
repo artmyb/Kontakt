@@ -321,5 +321,3 @@ on ui_control($reset_repf_time)
 $fade_time_repetition := 0
 set_text($fade_time_repetition_label_variable,$fade_time_repetition/1000&"ms")
 end on
-
-
