@@ -26,8 +26,9 @@ store your legato transitions in separate groups and name them accordingly:
 
 DEFINITIONS:
 
-REPETITION TIME: maximum time to trigger repetition samples after releasing a key.
-  If the same key is triggered "< REPETITION TIME " after releasing it, release sample will be triggered. Otherwise, start sample will be triggered.
+GAP TIME: maximum time to trigger repetition or legato samples after releasing a key.
+  If the same key is triggered "< GAP TIME " after releasing it, release sample will be triggered. Otherwise, start sample will be triggered.
+  If another note is triggered "< GAP TIME " after releasing the previous, a legato sample will be triggered.
   This should be set according to the player's & keyboard's capabilities.
   
 LEGATO FADE TIME: overlap time of end of first sample and beginning of the legato sample.
