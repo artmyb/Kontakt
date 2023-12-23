@@ -195,14 +195,22 @@ message(%downkeys[0]&" "&%downkeys[1]&" "&%downkeys[2]&" "&%downkeys[3]&" "&%dow
 		end if
 		play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0)
 	else
-		fade_out($ALL_EVENTS,$fade_time,1)
-		disallow_group($ALL_GROUPS)
 		if ($EVENT_NOTE-%downkeys[1] < 13 and $EVENT_NOTE-%downkeys[1] > -13)
+			fade_out($ALL_EVENTS,$fade_time,1)
+			disallow_group($ALL_GROUPS)
 			allow_group(find_group(!intervals[$EVENT_NOTE-%downkeys[1]+12]))
+			fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time)
 		else
+			fade_out($ALL_EVENTS,$fade_time_release,1)
+			disallow_group($ALL_GROUPS)
+			allow_group(find_group("release"))
+			fade_in(play_note(%downkeys[1],$EVENT_VELOCITY,0,0),$fade_time_release)
+			disallow_group($ALL_GROUPS)
 			allow_group(find_group("start"))
+			play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0)
+
 		end if
-		fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time)
+		
 	end if
 	$before1_wait := $ENGINE_UPTIME
 	wait(1000000)
@@ -242,14 +250,21 @@ $last_release := $EVENT_NOTE
 				end while
 	else
 		if ($EVENT_NOTE = %downkeys[0])
-			fade_out($ALL_EVENTS,$fade_time,1)
-			disallow_group($ALL_GROUPS)
 			if ($EVENT_NOTE-%downkeys[1] < 13 and $EVENT_NOTE-%downkeys[1] > -13)
+				fade_out($ALL_EVENTS,$fade_time,1)
+				disallow_group($ALL_GROUPS)
 				allow_group(find_group(!intervals[%downkeys[1]-$EVENT_NOTE+12]))
+				fade_in(play_note(%downkeys[1],$EVENT_VELOCITY,0,0),$fade_time)
 	    	else
+				fade_out($ALL_EVENTS,$fade_time_release,1)
+				disallow_group($ALL_GROUPS)
+				allow_group(find_group("release"))
+				fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time_release)
+				disallow_group($ALL_GROUPS)
 				allow_group(find_group("start"))
+				play_note(%downkeys[1],$EVENT_VELOCITY,0,0)
 			end if
-			fade_in(play_note(%downkeys[1],$EVENT_VELOCITY,0,0),$fade_time)
+			
 			$counter := search(%downkeys,$EVENT_NOTE)
 				while ($counter < num_elements(%downkeys))
 					%downkeys[$counter] := %downkeys[$counter+1]
@@ -321,3 +336,5 @@ on ui_control($reset_repf_time)
 $fade_time_repetition := 0
 set_text($fade_time_repetition_label_variable,$fade_time_repetition/1000&"ms")
 end on
+
+
