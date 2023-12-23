@@ -1,0 +1,340 @@
+{
+SIMPLE LEGATO by @artmyb
+
+HOW TO USE:
+store your legato transitions in separate groups and name them accordingly:
+1) name the groups of transition samples with the amount of transition by semi-tone
+	etc: group name of one octave up transitions :"+12"
+	etc: group name of perfect fifth down transitions: "-7"
+2) name the group with start samples as "start"
+3) name the group with release samples as "release"
+4) name the group with repetition samples as "0" (zero)
+
+DEFINITIONS:
+GAP TIME: maximum time to trigger a repetition or legato samples after releasing a key
+LEGATO FADE TIME: overlap time of end of first sample and beginning of the legato sample
+RELEASE FADE TIME: overlap time of end of first sample and beginning of the release sample
+REPETITON FADE TIME: overlap time of end of first sample and beginning of the repetition sample
+}
+on init
+make_perfview
+set_ui_height(4)
+
+
+
+declare ui_slider $gap_time (0,250)
+set_control_par(get_ui_id($gap_time),$CONTROL_PAR_DEFAULT_VALUE,200)
+$gap_time:=200
+make_persistent($gap_time)
+
+
+declare ui_label $gap_time_label(2,1)
+set_text($gap_time_label,"                    GAP TIME")
+
+declare ui_label $gap_time_label_variable(1,1)
+set_text($gap_time_label_variable,$gap_time&"ms")
+
+
+
+
+declare ui_slider $fade_time (0,500000)
+set_control_par(get_ui_id($fade_time),$CONTROL_PAR_DEFAULT_VALUE,150000)
+$fade_time := 150000
+make_persistent($fade_time)
+
+declare ui_label $fade_time_label(2,1)
+set_text($fade_time_label,"             LEGATO FADE TIME")
+
+declare ui_label $fade_time_label_variable(1,1)
+set_text($fade_time_label_variable,$fade_time/1000&"ms")
+
+
+
+
+declare ui_slider $fade_time_release (0,200000)
+set_control_par(get_ui_id($fade_time_release),$CONTROL_PAR_DEFAULT_VALUE,50000)
+$fade_time_release := 50000
+make_persistent($fade_time_release)
+
+declare ui_label $fade_time_release_label(2,1)
+set_text($fade_time_release_label,"            RELEASE FADE TIME")
+
+declare ui_label $fade_time_release_label_variable(1,1)
+set_text($fade_time_release_label_variable,$fade_time_release/1000&"ms")
+
+
+
+
+declare ui_slider $fade_time_repetition (0,250000)
+set_control_par(get_ui_id($fade_time_repetition),$CONTROL_PAR_DEFAULT_VALUE,0)
+$fade_time_repetition := 0
+make_persistent($fade_time_repetition)
+
+declare ui_label $fade_time_repetition_label(2,1)
+set_text($fade_time_repetition_label,"          REPETITON FADE TIME")
+
+declare ui_label $fade_time_repetition_label_variable(1,1)
+set_text($fade_time_repetition_label_variable,$fade_time_repetition/1000&"ms")
+
+
+
+declare ui_button $reset_rep_time
+set_text($reset_rep_time,"SET DEFAULT")
+
+declare ui_button $reset_leg_time
+set_text($reset_leg_time,"SET DEFAULT")
+
+declare ui_button $reset_rls_time
+set_text($reset_rls_time,"SET DEFAULT")
+
+declare ui_button $reset_repf_time
+set_text($reset_repf_time,"SET DEFAULT")
+
+
+
+move_control($gap_time,3,3)
+move_control($gap_time_label,1,3)
+move_control($gap_time_label_variable,4,3)
+move_control($fade_time,3,4)
+move_control($fade_time_label,1,4)
+move_control($fade_time_label_variable,4,4)
+move_control($fade_time_release,3,5)
+move_control($fade_time_release_label,1,5)
+move_control($fade_time_release_label_variable,4,5)
+move_control($fade_time_repetition,3,6)
+move_control($fade_time_repetition_label,1,6)
+move_control($fade_time_repetition_label_variable,4,6)
+move_control($reset_rep_time,5,3)
+move_control($reset_leg_time,5,4)
+move_control($reset_rls_time,5,5)
+move_control($reset_repf_time,5,6)
+
+
+declare $last_id
+declare $interval
+declare $last_release
+declare $note_counter := 0
+declare $temp_note_counter
+declare $temp_id
+declare $last_time_release
+declare $last_time_note
+declare $menu_switch:= 0
+declare $legato_switch:= 0
+declare $counter := 0
+declare $release_id
+declare $noteon_id
+declare $before_rep := 0
+declare $before1_wait
+declare $before2_wait
+
+declare %downkeys[10]
+
+declare !intervals[25]
+!intervals[0] := "-12"
+!intervals[1] := "-11"
+!intervals[2] := "-10"
+!intervals[3] := "-9"
+!intervals[4] := "-8"
+!intervals[5] := "-7"
+!intervals[6] := "-6"
+!intervals[7] := "-5"
+!intervals[8] := "-4"
+!intervals[9] := "-3"
+!intervals[10] := "-2"
+!intervals[11] := "-1"
+!intervals[12] := "0"
+!intervals[13] := "+1"
+!intervals[14] := "+2"
+!intervals[15] := "+3"
+!intervals[16] := "+4"
+!intervals[17] := "+5"
+!intervals[18] := "+6"
+!intervals[19] := "+7"
+!intervals[20] := "+8"
+!intervals[21] := "+9"
+!intervals[22] := "+10"
+!intervals[23] := "+11"
+!intervals[24] := "+12"
+
+end on
+
+
+{**********}
+
+
+on note
+$last_id := $EVENT_ID
+ignore_event($ALL_EVENTS)
+inc($note_counter)
+$last_time_note := $ENGINE_UPTIME
+$counter := num_elements(%downkeys)-1
+while ($counter > 0)
+	%downkeys[$counter] := %downkeys[$counter-1]
+	dec($counter)
+end while
+
+$before_rep := 0
+
+%downkeys[0] := $EVENT_NOTE
+
+{message("#of notes:"&$note_counter)}
+message(%downkeys[0]&" "&%downkeys[1]&" "&%downkeys[2]&" "&%downkeys[3]&" "&%downkeys[4]&" "&%downkeys[5])
+	if ($note_counter = 1)
+		fade_out($ALL_EVENTS,$fade_time_release,1)
+		disallow_group($ALL_GROUPS)
+		if ($ENGINE_UPTIME < $last_time_release + $gap_time)
+			$before_rep := 1
+			stop_wait($release_id,1)
+			if ($EVENT_NOTE = $last_release )
+				allow_group(find_group("0"))
+			else
+				allow_group(find_group(!intervals[$EVENT_NOTE-$last_release+12]))
+			end if
+		else
+			allow_group(find_group("start"))
+		end if
+		play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0)
+	else
+		if ($EVENT_NOTE-%downkeys[1] < 13 and $EVENT_NOTE-%downkeys[1] > -13)
+			fade_out($ALL_EVENTS,$fade_time,1)
+			disallow_group($ALL_GROUPS)
+			allow_group(find_group(!intervals[$EVENT_NOTE-%downkeys[1]+12]))
+			fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time)
+		else
+			fade_out($ALL_EVENTS,$fade_time_release,1)
+			disallow_group($ALL_GROUPS)
+			allow_group(find_group("release"))
+			fade_in(play_note(%downkeys[1],$EVENT_VELOCITY,0,0),$fade_time_release)
+			disallow_group($ALL_GROUPS)
+			allow_group(find_group("start"))
+			play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0)
+
+		end if
+		
+	end if
+	$before1_wait := $ENGINE_UPTIME
+	wait(1000000)
+	if ($ENGINE_UPTIME >= $before1_wait+1000)
+		fade_out($ALL_EVENTS,500000,1)
+		disallow_group($ALL_GROUPS)
+		allow_group(find_group("start"))
+		fade_in(play_note(%downkeys[0],$EVENT_VELOCITY,0,0),500000)
+	end if
+
+end on
+
+{**********}
+
+on release
+ignore_event($ALL_EVENTS)
+dec($note_counter)
+$last_time_release := $ENGINE_UPTIME
+{message("#of notes:"&$note_counter)}
+$release_id := $NI_CALLBACK_ID
+
+$before_rep := 0
+message(%downkeys[0]&" "&%downkeys[1]&" "&%downkeys[2]&" "&%downkeys[3]&" "&%downkeys[4]&" "&%downkeys[5])
+$last_release := $EVENT_NOTE
+	if ($note_counter = 0)
+		wait(1000*$gap_time)
+		if ($before_rep = 0)
+			fade_out($ALL_EVENTS,$fade_time_release,1)
+			disallow_group($ALL_GROUPS)
+			allow_group(find_group("release"))
+			fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time_release)
+		end if
+		$counter := search(%downkeys,$EVENT_NOTE)
+				while ($counter < num_elements(%downkeys))
+					%downkeys[$counter] := %downkeys[$counter+1]
+					inc($counter)
+				end while
+	else
+		if ($EVENT_NOTE = %downkeys[0])
+			if ($EVENT_NOTE-%downkeys[1] < 13 and $EVENT_NOTE-%downkeys[1] > -13)
+				fade_out($ALL_EVENTS,$fade_time,1)
+				disallow_group($ALL_GROUPS)
+				allow_group(find_group(!intervals[%downkeys[1]-$EVENT_NOTE+12]))
+				fade_in(play_note(%downkeys[1],$EVENT_VELOCITY,0,0),$fade_time)
+	    	else
+				fade_out($ALL_EVENTS,$fade_time_release,1)
+				disallow_group($ALL_GROUPS)
+				allow_group(find_group("release"))
+				fade_in(play_note($EVENT_NOTE,$EVENT_VELOCITY,0,0),$fade_time_release)
+				disallow_group($ALL_GROUPS)
+				allow_group(find_group("start"))
+				play_note(%downkeys[1],$EVENT_VELOCITY,0,0)
+			end if
+			
+			$counter := search(%downkeys,$EVENT_NOTE)
+				while ($counter < num_elements(%downkeys))
+					%downkeys[$counter] := %downkeys[$counter+1]
+					inc($counter)
+				end while
+		else
+			$counter := search(%downkeys,$EVENT_NOTE)
+				while ($counter < num_elements(%downkeys))
+					%downkeys[$counter] := %downkeys[$counter+1]
+					inc($counter)
+				end while
+		end if
+
+	end if
+
+message(%downkeys[0]&" "&%downkeys[1]&" "&%downkeys[2]&" "&%downkeys[3]&" "&%downkeys[4]&" "&%downkeys[5])
+	
+	$before2_wait := $ENGINE_UPTIME
+	wait(1000000)
+	if ($ENGINE_UPTIME >= $before2_wait+1000)
+		fade_out($ALL_EVENTS,500000,1)
+		disallow_group($ALL_GROUPS)
+		allow_group(find_group("start"))
+		fade_in(play_note(%downkeys[0],$EVENT_VELOCITY,0,0),500000)
+	end if
+
+end on
+
+
+
+{**********}
+
+
+
+on ui_control($gap_time)
+set_text($gap_time_label_variable,$gap_time&"ms")
+end on
+
+on ui_control($fade_time)
+set_text($fade_time_label_variable,$fade_time/1000&"ms")
+end on
+
+on ui_control($fade_time_release)
+set_text($fade_time_release_label_variable,$fade_time_release/1000&"ms")
+end on
+
+on ui_control($fade_time_repetition)
+set_text($fade_time_repetition_label_variable,$fade_time_repetition/1000&"ms")
+end on
+
+
+
+on ui_control($reset_rep_time)
+$gap_time := 200
+set_text($gap_time_label_variable,$gap_time&"ms")
+end on
+
+on ui_control($reset_leg_time)
+$fade_time := 100000
+set_text($fade_time_label_variable,$fade_time/1000&"ms")
+end on
+
+on ui_control($reset_rls_time)
+$fade_time_release := 50000
+set_text($fade_time_release_label_variable,$fade_time_release/1000&"ms")
+end on
+
+on ui_control($reset_repf_time)
+$fade_time_repetition := 0
+set_text($fade_time_repetition_label_variable,$fade_time_repetition/1000&"ms")
+end on
+
+
